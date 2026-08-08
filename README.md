@@ -1,7 +1,7 @@
-# shimeji-window
+# shimeji
 
 <p align="center">
-  <img src="docs/images/repo-banner.png" alt="shimeji-window banner" width="100%" />
+  <img src="docs/images/repo-banner.png" alt="shimeji banner" width="100%" />
 </p>
 
 <p align="center">
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ngoc-thu/shimeji-window/releases/latest">⬇ Download latest release</a>
+  <a href="https://github.com/ngoc-thu/shimeji/releases/latest">⬇ Download latest release</a>
 </p>
 
 A modern, practical **Windows 10/11 & Linux** desktop mascot (Shimeji) application featuring native Windows API integration, standalone `.exe` GUI launchers, DPI scaling fixes, and a built-in Settings GUI.
