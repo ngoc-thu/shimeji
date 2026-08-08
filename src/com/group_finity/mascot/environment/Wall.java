@@ -51,7 +51,7 @@ public class Wall implements Border {
 
 	@Override
 	public boolean isOn(final Point location) {
-		return getArea().isVisible() && (getX() == location.x) && (getTop() <= location.y) && (location.y <= getBottom());
+		return getArea().isVisible() && (Math.abs(getX() - location.x) <= 2) && (getTop() - 10 <= location.y) && (location.y <= getBottom() + 10);
 	}
 
 	public Point move(final Point location) {

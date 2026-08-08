@@ -30,10 +30,7 @@ public class MascotEnvironment {
 	 */
 	public Area getWorkArea() {
 		if (numScreens == 1) {
-			if (currentWorkArea == null) {
-				currentWorkArea = impl.getWorkArea();
-			}
-			return currentWorkArea;
+			return impl.getWorkArea();
 		}
 
 		//if ( currentWorkArea!=null ) {

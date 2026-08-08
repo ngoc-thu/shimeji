@@ -4,5 +4,7 @@
 *.class
 *.log
 bin/
+classes/
 conf2/
 img2/
+.current_character

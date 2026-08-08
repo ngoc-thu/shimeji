@@ -98,41 +98,48 @@ Currently bundled in this project:
 
 Recommended environment:
 
-- Ubuntu or another Linux desktop using **X11**
-- `openjdk-21-jdk` (or another modern JDK)
-- `ant`
+- **Windows**: Windows 10/11 with Java 8+ installed (JDK 19, 21 recommended) and Python 3.x for Settings GUI.
+- **Linux**: Ubuntu or another Linux desktop using **X11**, `openjdk-21-jdk` (or another modern JDK), `ant`, and Python 3.x.
 
-Example install:
+Example install on Ubuntu:
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y openjdk-21-jdk ant
+sudo apt-get install -y openjdk-21-jdk ant python3 python3-tk
 ```
-
-Wayland is not an expected target for this codebase.
 
 ## Build
 
+### On Windows
+Run `build.bat` directly (no Ant required):
+
+```cmd
+build.bat
+```
+
+Or using Ant if installed: `ant clean jar`
+
+### On Linux
 ```bash
-git clone https://github.com/ngoc-thu/shimeji-ubuntu.git
-cd shimeji-ubuntu
 ant clean jar
 ```
 
 ## Run
 
-Use the original launcher:
+### On Windows
+Double-click **[Shimeji.exe](file:///D:/Code/ngoc-tien/shimeji/Shimeji.exe)** (clean GUI launcher with custom icon, no terminal window) or run `launch.bat`.
 
+### On Linux
 ```bash
 ./launch.sh
 ```
 
-Or run the jar entrypoint using the local launch wrapper if you created one in your environment.
-
 ## Settings GUI
 
-Launch the Settings GUI with:
+### On Windows
+Double-click **[ShimejiSettings.exe](file:///D:/Code/ngoc-tien/shimeji/ShimejiSettings.exe)** (clean GUI launcher, no terminal window) or run `run-settings.bat`.
 
+### On Linux
 ```bash
 ./run-settings.sh
 ```

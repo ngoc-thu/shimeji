@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
-import fcntl
 import os
+import platform
 import shutil
 import subprocess
 import sys
+import tempfile
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-APP_ROOT = "/home/ngoctien/.openclaw/workspace/apps/linux-shimeji"
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 WINDOW_CONF = os.path.join(APP_ROOT, "window.conf")
 TITLES_CONF = os.path.join(APP_ROOT, "titles.conf")
 SETTINGS_PROPS = os.path.join(APP_ROOT, "settings.properties")
-RUN_SCRIPT = os.path.join(APP_ROOT, "run-linux-shimeji.sh")
 CHARACTERS_DIR = os.path.join(APP_ROOT, "characters")
 IMG_DIR = os.path.join(APP_ROOT, "img")
 CURRENT_CHARACTER = os.path.join(APP_ROOT, ".current_character")
-LOCK_FILE = "/tmp/linux-shimeji-settings.lock"
+LOCK_FILE = os.path.join(tempfile.gettempdir(), "shimeji-settings.lock")
+
+IS_WINDOWS = platform.system() == "Windows"
+RUN_SCRIPT = os.path.join(APP_ROOT, "launch.bat" if IS_WINDOWS else "launch.sh")
 
 HEADER = "Put window offsets on the following lines in this order : x, y, width, height. No entry will default to 0."
 DEFAULT_WINDOW = ["0", "0", "0", "0"]
@@ -24,16 +27,27 @@ _lock_handle = None
 
 def acquire_single_instance_lock():
     global _lock_handle
-    _lock_handle = open(LOCK_FILE, "a+")
     try:
-        fcntl.flock(_lock_handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        _lock_handle = open(LOCK_FILE, "a+")
+        if IS_WINDOWS:
+            import msvcrt
+            try:
+                msvcrt.locking(_lock_handle.fileno(), msvcrt.LK_NBLCK, 1)
+            except OSError:
+                return False
+        else:
+            import fcntl
+            try:
+                fcntl.flock(_lock_handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError:
+                return False
         _lock_handle.seek(0)
         _lock_handle.truncate()
         _lock_handle.write(str(os.getpid()))
         _lock_handle.flush()
         return True
-    except OSError:
-        return False
+    except Exception:
+        return True
 
 
 def list_characters():
@@ -65,6 +79,8 @@ def apply_character(name):
     src = os.path.join(CHARACTERS_DIR, name)
     if not os.path.isdir(src):
         raise FileNotFoundError(f"Character not found: {name}")
+    if not os.path.exists(IMG_DIR):
+        os.makedirs(IMG_DIR, exist_ok=True)
     for i in range(1, 47):
         shutil.copyfile(os.path.join(src, f"shime{i}.png"), os.path.join(IMG_DIR, f"shime{i}.png"))
     set_current_character(name)
@@ -119,14 +135,25 @@ def write_settings_props(self_cloning_enabled):
 
 
 def restart_shimeji():
-    subprocess.run("pkill -f 'com.group_finity.mascot.Main'", shell=True)
-    subprocess.Popen([RUN_SCRIPT], cwd=APP_ROOT)
+    if IS_WINDOWS:
+        subprocess.run(
+            'wmic process where "name=\'java.exe\' or name=\'javaw.exe\'" get commandline,processid',
+            shell=True,
+            capture_output=True
+        )
+        # Kill Java instances running Shimeji.jar
+        ps_cmd = 'Get-WmiObject Win32_Process | Where-Object { $_.CommandLine -like "*Shimeji.jar*" } | ForEach-Object { $_.Terminate() }'
+        subprocess.run(["powershell", "-Command", ps_cmd], capture_output=True)
+        subprocess.Popen([RUN_SCRIPT], cwd=APP_ROOT, shell=True)
+    else:
+        subprocess.run("pkill -f 'com.group_finity.mascot.Main'", shell=True)
+        subprocess.Popen([RUN_SCRIPT], cwd=APP_ROOT)
 
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Linux Shimeji Settings")
+        self.title("Shimeji Settings")
         self.geometry("700x600")
         self.minsize(660, 560)
         self.configure(padx=12, pady=12)
@@ -143,7 +170,7 @@ class App(tk.Tk):
         top = ttk.Frame(self)
         top.grid(row=0, column=0, sticky="ew")
         top.grid_columnconfigure(0, weight=1)
-        ttk.Label(top, text="Linux Shimeji Settings", font=("Sans", 14, "bold")).grid(row=0, column=0, sticky="w")
+        ttk.Label(top, text="Shimeji Settings", font=("Sans", 14, "bold")).grid(row=0, column=0, sticky="w")
         ttk.Label(top, text="Chỉnh nhân vật, vị trí bám cửa sổ, titles và hành vi nhân bản.").grid(row=1, column=0, sticky="w", pady=(4, 10))
 
         chars = ttk.LabelFrame(self, text="Character")
@@ -261,12 +288,15 @@ class App(tk.Tk):
     def restart(self):
         try:
             restart_shimeji()
-            messagebox.showinfo("Restarted", "Đã restart Linux Shimeji.")
+            messagebox.showinfo("Restarted", "Đã restart Shimeji.")
         except Exception as e:
             messagebox.showerror("Restart failed", str(e))
 
     def open_folder(self):
-        subprocess.Popen(["xdg-open", APP_ROOT])
+        if IS_WINDOWS:
+            os.startfile(APP_ROOT)
+        else:
+            subprocess.Popen(["xdg-open", APP_ROOT])
 
 
 if __name__ == "__main__":

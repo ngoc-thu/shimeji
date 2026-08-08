@@ -22,7 +22,7 @@ public abstract class NativeFactory {
 	static {
 		final String basePackage = NativeFactory.class.getName().substring(0, NativeFactory.class.getName().lastIndexOf('.'));
 
-		final String subPackage = Platform.isX11() ? "x11" : "generic";
+		final String subPackage = Platform.isWindows() ? "win" : (Platform.isX11() ? "x11" : "generic");
 
 		try {
 			final Class<? extends NativeFactory> impl = (Class<? extends NativeFactory>)Class.forName(basePackage+"."+subPackage+".NativeFactoryImpl");
