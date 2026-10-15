@@ -1,7 +1,8 @@
 @echo off
-cd /d "%~dp0"
-if exist "%JAVA_HOME%\bin\javaw.exe" (
-    start "" "%JAVA_HOME%\bin\javaw.exe" -Xmx512m -jar Shimeji.jar
-) else (
-    start "" javaw -Xmx512m -jar Shimeji.jar
-)
+pushd "%~dp0" || exit /b 1
+set "SHIMEJI_PYTHON=python"
+if exist ".venv\Scripts\python.exe" set "SHIMEJI_PYTHON=.venv\Scripts\python.exe"
+"%SHIMEJI_PYTHON%" shimeji.py %*
+set "SHIMEJI_RESULT=%ERRORLEVEL%"
+popd
+exit /b %SHIMEJI_RESULT%

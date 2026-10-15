@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd /home/ngoctien/.openclaw/workspace/apps/linux-shimeji
-exec python3 /home/ngoctien/.openclaw/workspace/apps/linux-shimeji/shimeji_settings.py
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
+exec bash ./launch.sh --settings
