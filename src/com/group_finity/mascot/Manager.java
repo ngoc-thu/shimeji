@@ -262,6 +262,15 @@ public class Manager {
 		}
 	}
 
+	public Mascot getFirstMascot() {
+		synchronized (this.getMascots()) {
+			if (!this.getMascots().isEmpty()) {
+				return this.getMascots().get(0);
+			}
+			return null;
+		}
+	}
+
 	public void setExitOnLastRemoved(boolean exitOnLastRemoved) {
 		this.exitOnLastRemoved = exitOnLastRemoved;
 	}

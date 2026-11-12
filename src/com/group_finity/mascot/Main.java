@@ -64,6 +64,8 @@ public class Main {
 	private static final String APP_ROOT = System.getProperty("user.dir");
 	private static final String WINDOW_CONF = APP_ROOT + File.separator + "window.conf";
 	private static final String TITLES_CONF = APP_ROOT + File.separator + "titles.conf";
+	private static final String REMINDERS_CONF = APP_ROOT + File.separator + "conf" + File.separator + "reminders.properties";
+	private static final String DIALOGUES_CONF = APP_ROOT + File.separator + "conf" + File.separator + "dialogues.conf";
 	private static final String SETTINGS_SCRIPT = APP_ROOT + File.separator + "run-settings.sh";
 	private static final String SETTINGS_PROPERTIES = APP_ROOT + File.separator + "settings.properties";
 
@@ -76,6 +78,9 @@ public class Main {
 
 		// 設定を読み込む
 		loadConfiguration();
+
+		// Khởi động hệ thống Lời nhắc & Trò chuyện
+		com.group_finity.mascot.speech.ReminderManager.getInstance().start();
 
 		// トレイアイコンを作成する
 		if (SystemTray.isSupported()) {
@@ -212,13 +217,50 @@ public class Main {
 			}
 		});
 
+		final MenuItem talkMenu = new MenuItem("💬 Trò chuyện (Nói chuyện)");
+		talkMenu.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent event) {
+				if (getManager().getFirstMascot() != null) {
+					com.group_finity.mascot.speech.ReminderManager.getInstance().sayRandomDialogue(getManager().getFirstMascot());
+				}
+			}
+		});
+
+		final MenuItem reminderMenu = new MenuItem("⏰ Lời nhắc tiếp theo");
+		reminderMenu.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent event) {
+				if (getManager().getFirstMascot() != null) {
+					com.group_finity.mascot.speech.ReminderManager.getInstance().sayNextReminderInfo(getManager().getFirstMascot());
+				}
+			}
+		});
+
+		final MenuItem openRemindersConfMenu = new MenuItem("Settings: Open reminders.properties");
+		openRemindersConfMenu.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent event) {
+				openPath(REMINDERS_CONF);
+			}
+		});
+
+		final MenuItem openDialoguesConfMenu = new MenuItem("Settings: Open dialogues.conf");
+		openDialoguesConfMenu.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent event) {
+				openPath(DIALOGUES_CONF);
+			}
+		});
+
 		// ポップアップメニューを作成
 		final PopupMenu trayPopup = new PopupMenu();
+		trayPopup.add(talkMenu);
+		trayPopup.add(reminderMenu);
+		trayPopup.add(new MenuItem("-"));
 		trayPopup.add(increaseMenu);
 		trayPopup.add(gatherMenu);
 		trayPopup.add(oneMenu);
 		trayPopup.add(new MenuItem("-"));
 		trayPopup.add(openSettingsGuiMenu);
+		trayPopup.add(openRemindersConfMenu);
+		trayPopup.add(openDialoguesConfMenu);
 		trayPopup.add(openWindowConfMenu);
 		trayPopup.add(openTitlesConfMenu);
 		trayPopup.add(openAppFolderMenu);
@@ -299,6 +341,7 @@ public class Main {
 
 	public void exit() {
 
+		com.group_finity.mascot.speech.ReminderManager.getInstance().stop();
 		this.getManager().disposeAll();
 		this.getManager().stop();
 
@@ -307,12 +350,19 @@ public class Main {
 
 	public void openPath(final String path) {
 		try {
-			final Desktop desktop = Desktop.getDesktop();
 			final File file = new File(path);
-			if (file.isDirectory()) {
+			if (!file.exists()) {
+				return;
+			}
+			try {
+				new ProcessBuilder("xdg-open", path).start();
+				return;
+			} catch (final Exception ignored) {
+			}
+
+			final Desktop desktop = Desktop.getDesktop();
+			if (desktop != null && desktop.isSupported(Desktop.Action.OPEN)) {
 				desktop.open(file);
-			} else if (file.exists()) {
-				desktop.edit(file);
 			}
 		} catch (final Exception e) {
 			log.log(Level.WARNING, "Failed to open path: " + path, e);
@@ -357,7 +407,7 @@ public class Main {
 		return this.configuration;
 	}
 
-	private Manager getManager() {
+	public Manager getManager() {
 		return this.manager;
 	}
 

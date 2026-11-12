@@ -96,6 +96,11 @@ public class Mascot {
 	
 	private MascotEnvironment environment = new MascotEnvironment(this);
 
+	/**
+	 * Bóng thoại đang hiển thị của mascot này.
+	 */
+	private com.group_finity.mascot.speech.SpeechBubble speechBubble = null;
+
 	public Mascot() {
 		this.id = lastId.incrementAndGet();
 
@@ -106,7 +111,11 @@ public class Mascot {
 		//getWindow().asJWindow().setBounds(0,0,128,128);
 
 		// マウスハンドラを登録
-		getWindow().asJWindow().addMouseListener(new MascotEventHandler(this));
+		final MascotEventHandler handler = new MascotEventHandler(this);
+		getWindow().asJWindow().addMouseListener(handler);
+		if (getWindow().asJWindow().getContentPane() != null) {
+			getWindow().asJWindow().getContentPane().addMouseListener(handler);
+		}
 
 	}
 
@@ -163,11 +172,21 @@ public class Mascot {
 			// Old X11 workaround hid the window on specific ticks, which can cause
 			// visible flicker on modern compositors. Keep the mascot visible and
 			// rely on the regular image update path instead.
+
+			// Cập nhật vị trí bóng thoại bám theo nhân vật
+			if (this.speechBubble != null && this.speechBubble.isVisible()) {
+				this.speechBubble.updatePosition();
+			}
 		}
 	}
 
 	public void dispose() {
 		log.log(Level.INFO, "マスコット破棄({0})", this);
+
+		if (this.speechBubble != null) {
+			this.speechBubble.closeBubble();
+			this.speechBubble = null;
+		}
 
 		getWindow().asJWindow().dispose();
 		if (getManager() != null) {
@@ -294,6 +313,26 @@ public class Mascot {
 
 	public void move(int x, int y) {
 		anchor.setLocation(anchor.getX()+x,anchor.getY()+y);
+	}
+
+	public com.group_finity.mascot.speech.SpeechBubble getSpeechBubble() {
+		return this.speechBubble;
+	}
+
+	public void setSpeechBubble(final com.group_finity.mascot.speech.SpeechBubble speechBubble) {
+		this.speechBubble = speechBubble;
+	}
+
+	public void say(final String message) {
+		com.group_finity.mascot.speech.SpeechManager.getInstance().say(this, message);
+	}
+
+	public void say(final String title, final String message) {
+		com.group_finity.mascot.speech.SpeechManager.getInstance().say(this, title, message);
+	}
+
+	public void say(final String title, final String message, final int durationSeconds) {
+		com.group_finity.mascot.speech.SpeechManager.getInstance().say(this, title, message, durationSeconds);
 	}
 
 }

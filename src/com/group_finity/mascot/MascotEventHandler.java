@@ -42,6 +42,16 @@ public class MascotEventHandler implements MouseListener {
 
 	public void mousePressed(final MouseEvent event) {
 
+		if (SwingUtilities.isRightMouseButton(event) || event.isPopupTrigger()) {
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					showPopup(event.getComponent(), event.getX(), event.getY());
+				}
+			});
+			return;
+		}
+
 		// マウスが押されたらドラッグアニメーションに切り替える
 		if (getMascot().getBehavior() != null) {
 			try {
@@ -56,27 +66,28 @@ public class MascotEventHandler implements MouseListener {
 
 	public void mouseReleased(final MouseEvent event) {
 
-		if (event.isPopupTrigger()) {
-			SwingUtilities.invokeLater(new Runnable(){
+		if (SwingUtilities.isRightMouseButton(event) || event.isPopupTrigger()) {
+			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-					showPopup(event.getX(), event.getY());
+					showPopup(event.getComponent(), event.getX(), event.getY());
 				}
 			});
-		} else {
-			if (getMascot().getBehavior() != null) {
-				try {
-					getMascot().getBehavior().mouseReleased(event);
-				} catch (final CantBeAliveException e) {
-					log.log(Level.SEVERE, "生き続けることが出来ない状況", e);
-					getMascot().dispose();
-				}
+			return;
+		}
+
+		if (getMascot().getBehavior() != null) {
+			try {
+				getMascot().getBehavior().mouseReleased(event);
+			} catch (final CantBeAliveException e) {
+				log.log(Level.SEVERE, "生き続けることが出来ない状況", e);
+				getMascot().dispose();
 			}
 		}
 
 	}
 
-	private void showPopup(final int x, final int y) {
+	private void showPopup(final java.awt.Component invoker, final int x, final int y) {
 		final JPopupMenu popup = new JPopupMenu();
 
 		popup.addPopupMenuListener(new PopupMenuListener() {
@@ -94,6 +105,28 @@ public class MascotEventHandler implements MouseListener {
 				getMascot().setAnimating(false);
 			}
 		});
+
+		// Mục trò chuyện ngay
+		final JMenuItem talkMenu = new JMenuItem("💬 Trò chuyện (Nói chuyện)");
+		talkMenu.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(final ActionEvent e) {
+				com.group_finity.mascot.speech.ReminderManager.getInstance().sayRandomDialogue(getMascot());
+			}
+		});
+
+		// Mục xem lời nhắc tiếp theo
+		final JMenuItem reminderMenu = new JMenuItem("⏰ Lời nhắc tiếp theo");
+		reminderMenu.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(final ActionEvent e) {
+				com.group_finity.mascot.speech.ReminderManager.getInstance().sayNextReminderInfo(getMascot());
+			}
+		});
+
+		popup.add(talkMenu);
+		popup.add(reminderMenu);
+		popup.add(new JSeparator());
 
 		final JMenuItem disposeMenu = new JMenuItem("Quit");
 		disposeMenu.addActionListener(new ActionListener() {
@@ -205,13 +238,16 @@ public class MascotEventHandler implements MouseListener {
 			popup.add(closeMenu);
 		}
 
-		popup.show(getMascot().getWindow().asJWindow(), x, y);
+		final java.awt.Component targetComp = invoker != null ? invoker : getMascot().getWindow().asJWindow();
+		popup.show(targetComp, x, y);
 	}
 
 	@Override
-	public void mouseClicked(MouseEvent e) {
-		// TODO 自動生成されたメソッド・スタブ
-
+	public void mouseClicked(final MouseEvent e) {
+		if (SwingUtilities.isLeftMouseButton(e) && e.getClickCount() == 1) {
+			// Click chuột trái vào nhân vật -> nhân vật nói chuyện ngay
+			com.group_finity.mascot.speech.ReminderManager.getInstance().sayRandomDialogue(getMascot());
+		}
 	}
 
 	@Override

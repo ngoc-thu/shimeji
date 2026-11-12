@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd /home/ngoctien/.openclaw/workspace/apps/linux-shimeji
-exec python3 /home/ngoctien/.openclaw/workspace/apps/linux-shimeji/shimeji_settings.py
+
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$APP_DIR"
+exec python3 "$APP_DIR/shimeji_settings.py" "$@"
